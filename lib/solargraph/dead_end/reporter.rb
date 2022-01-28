@@ -28,8 +28,7 @@ module Solargraph
             terminal: @terminal,
             highlight_lines: block.lines
           ).call
-
-          result << error_output(explain, document, block)
+          result.push(*error_output(explain, document, block))
         end
 
         result
@@ -38,23 +37,47 @@ module Solargraph
       private
 
       def error_output(explain, document, block)
+        # byebug
         relevant_lines = block.lines.reject { |l| l.line.strip.empty? }
-        {
-          message: explain.errors.first + "\n" + document,
-          range: {
-            start: {
-              line: relevant_lines.first.line_number - 1,
-              character: 0
+        errors = []
+        # byebug
+        relevant_lines.each do |line|
+
+          errors << {
+            message: "Unmatched keyword or missing bracket" + "\n" + document,
+            range: {
+              start: {
+                line:line.line_number - 1,
+                character: 0
+              },
+              end: {
+                line: line.line_number - 1,
+                character: line.line.length
+              }
             },
-            end: {
-              line: relevant_lines.last.line_number - 1,
-              character: relevant_lines.last.line.length
-            }
-          },
-          severity: 1,
-          source: "DeadEnd",
-          code: "Syntax"
-        }
+            severity: 1,
+            source: "DeadEnd",
+            code: "Syntax"
+          }
+        end
+
+        # {
+        #   message: explain.errors.first + "\n" + document,
+        #   range: {
+        #     start: {
+        #       line: relevant_lines.first.line_number - 1,
+        #       character: 0
+        #     },
+        #     end: {
+        #       line: relevant_lines.last.line_number - 1,
+        #       character: relevant_lines.last.line.length
+        #     }
+        #   },
+        #   severity: 1,
+        #   source: "DeadEnd",
+        #   code: "Syntax"
+        # }
+        errors
       end
     end
   end

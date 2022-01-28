@@ -15,10 +15,9 @@ RSpec.describe Solargraph::DeadEnd do
     )
     reporter = Solargraph::DeadEnd::Reporter.new
     errors = reporter.diagnose(source, nil)
-
     expect(errors).to include(
       hash_including(
-        message: a_string_matching(/Unmatched keyword, missing `end' ?/),
+        message: a_string_matching(/Unmatched keyword or missing bracket/),
         range: hash_including(
           start: hash_including(line: 1, character: 0),
           end: hash_including(line: 1, character: 18)
@@ -28,6 +27,31 @@ RSpec.describe Solargraph::DeadEnd do
         code: "Syntax"
       )
     )
+  end
+
+  context "when there are multiple errors" do
+    it "Isolates errors from diffrernt lines" do
+      source = Solargraph::Source.load_string(
+        <<~SRC
+        class MyClass
+          def my_method
+            puts " welcome to my app"
+            my_list.each do |x|
+              puts "welcome to my app"
+            end
+            puts "the method is done"
+            my_list.map do |x|
+
+
+          def my_method_tow
+          end
+        end
+        SRC
+      )
+      reporter = Solargraph::DeadEnd::Reporter.new
+      errors = reporter.diagnose(source, nil)
+      puts errors
+    end
   end
 
   it "no errors if source is empty" do
@@ -110,6 +134,6 @@ RSpec.describe Solargraph::DeadEnd do
     reporter = Solargraph::DeadEnd::Reporter.new
     errors = reporter.diagnose(source, nil)
 
-    expect(errors.count).to eq(2)
+    expect(errors.count).to eq(6)
   end
 end
